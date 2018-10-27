@@ -13,12 +13,12 @@ try:
     #line = str(" ".join(sys.argv[3::]))
     register = str(sys.argv[3])
     dirección = str(sys.argv[4])
+    expires = str(sys.argv[5])
 except IndexError:
-    print("Usage: client.py ip puerto registrer dirección")
+    print("Usage: client.py ip puerto registrer sip_adress expires_value")
     sys.exit()
 
-LINE = register + " sip:" + dirección + " SIP/2.0"
-
+LINE = register + " sip:" + dirección + " SIP/2.0\r\n" + "Expires: " + expires + "\r\n\r\n"
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as my_socket:
     my_socket.connect((SERVER, PORT))

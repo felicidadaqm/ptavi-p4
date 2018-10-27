@@ -22,13 +22,18 @@ class SIPRegistrerHandler(socketserver.DatagramRequestHandler):
         self.wfile.write(b"Hemos recibido tu peticion \n")
         for line in self.rfile:
             print("El cliente nos manda ", line.decode('utf-8'))
-            petición = line.decode('utf-8').split()
+            petición = line.decode('utf-8').split(" ")
+
             if petición[0] == 'REGISTER':
                 dirección = petición[1][petición[1].find(':')+1:]
                 ip = self.client_address[0]
-                puerto = self.client_address[1]
                 self.client_dicc[dirección] = ip
                 self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')
+
+            elif petición[0] == 'Expires:' and int(petición[1]) == 0:
+                del self.client_dicc[dirección]
+                self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')
+
         print(self.client_dicc)
 
 if __name__ == "__main__":
