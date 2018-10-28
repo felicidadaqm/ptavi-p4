@@ -7,6 +7,8 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 import socketserver
 import sys
 import json
+import time
+from datetime import datetime, timedelta
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
@@ -45,11 +47,13 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     del self.client_dicc[dirección]
                     self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')  
                 else:
-                    self.client_dicc[dirección] = [("address:", ip), ("expires:", int(petición[1]))]
+                    caduc = time.ctime(time.time() + int(petición[1]))
+                    GTM_time = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
+                    caducidad = str(GTM_time + " +" + petición[1][:-2])
+                    self.client_dicc[dirección] = [("address:", ip), ("expires:", caducidad)]
                     self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')     
 
         print(self.client_dicc)
-        print("-------")
         self.register2json()
 
 if __name__ == "__main__":
