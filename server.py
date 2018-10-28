@@ -20,6 +20,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     def register2json(self):
         with open('registered.json', 'w') as json_file:
             json.dump(self.client_dicc, json_file)
+        
 
     def handle(self):
         """
@@ -50,8 +51,23 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     caduc = time.ctime(time.time() + int(petición[1]))
                     GTM_time = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
                     caducidad = str(GTM_time + " +" + petición[1][:-2])
+
+                    seconds = timedelta(seconds=int(petición[1]))
+                    caducid = datetime.now() + seconds
+                    print(datetime.now() + seconds)
+                    
+                    print(time.strftime('%Y-%m-%d %H:%M:%S'))
+                    print(caduc)
+
                     self.client_dicc[dirección] = [("address:", ip), ("expires:", caducidad)]
                     self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')     
+
+ 
+        for user in self.client_dicc:
+            caducidad = self.client_dicc[user][1][1]
+            actual_time = datetime.now()
+            print(caducidad) # ME HE QUEDADO POR AQUÍ
+
 
         print(self.client_dicc)
         self.register2json()
