@@ -7,8 +7,8 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 import socketserver
 import sys
 import json
-import time
 from datetime import datetime, timedelta
+import os.path
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
@@ -21,6 +21,22 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         with open('registered.json', 'w') as json_file:
             json.dump(self.client_dicc, json_file)
         
+    def caducado(self):
+        user_list = []
+        for user in self.client_dicc:
+            caducidad = datetime.strptime(self.client_dicc[user][1][1],'%Y-%m-%d %H:%M:%S')
+            actual_time = datetime.now()
+            if actual_time >= caducidad:
+                user_list.append(user)
+        for user in user_list:
+            del self.client_dicc[user]
+
+    def json2registered(self):
+        if os.path.exists('registered.json'):
+            with open('registered.json') as json_file:
+                print("boh")
+        else:
+            self.register2json()
 
     def handle(self):
         """
@@ -48,29 +64,15 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                     del self.client_dicc[dirección]
                     self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')  
                 else:
-                    caduc = time.ctime(time.time() + int(petición[1]))
-                    GTM_time = time.strftime('%Y-%m-%d %H:%M:%S', time.gmtime(time.time()))
-                    caducidad = str(GTM_time + " +" + petición[1][:-2])
-
                     seconds = timedelta(seconds=int(petición[1]))
-                    caducid = datetime.now() + seconds
-                    print(datetime.now() + seconds)
-                    
-                    print(time.strftime('%Y-%m-%d %H:%M:%S'))
-                    print(caduc)
+                    caducidad = datetime.now() + seconds
 
-                    self.client_dicc[dirección] = [("address:", ip), ("expires:", caducidad)]
-                    self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')     
+                    self.client_dicc[dirección] = [("address:", ip), ("expires:", str(caducidad)[:-7])]
+                    self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')
 
- 
-        for user in self.client_dicc:
-            caducidad = self.client_dicc[user][1][1]
-            actual_time = datetime.now()
-            print(caducidad) # ME HE QUEDADO POR AQUÍ
-
-
+        self.caducado()
+        self.json2registered()
         print(self.client_dicc)
-        self.register2json()
 
 if __name__ == "__main__":
     # Listens at localhost ('') port 6001 
@@ -81,6 +83,5 @@ if __name__ == "__main__":
     print("Lanzando servidor UDP de eco...")
     try:
         serv.serve_forever()
-        SIPRegisterHandler.register2json()
     except KeyboardInterrupt:
         print("Finalizado servidor")
