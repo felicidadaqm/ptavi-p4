@@ -20,6 +20,13 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
     def register2json(self):
         with open('registered.json', 'w') as json_file:
             json.dump(self.client_dicc, json_file)
+
+    def json2registered(self):
+        if os.path.exists('registered.json'):
+            with open('registered.json', 'w') as json_file:
+                json.dump(self.client_dicc, json_file)
+        else:
+            self.register2json()
         
     def caducado(self):
         user_list = []
@@ -30,13 +37,6 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 user_list.append(user)
         for user in user_list:
             del self.client_dicc[user]
-
-    def json2registered(self):
-        if os.path.exists('registered.json'):
-            with open('registered.json') as json_file:
-                print("boh")
-        else:
-            self.register2json()
 
     def handle(self):
         """
@@ -77,6 +77,10 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 if __name__ == "__main__":
     # Listens at localhost ('') port 6001 
     # and calls the EchoHandler class to manage the request
+    if len(sys.argv) != 2:
+        print("Usage: server.py port")
+        sys.exit()
+
     port = int(sys.argv[1])
     serv = socketserver.UDPServer(('', port), SIPRegisterHandler)
 
@@ -85,3 +89,4 @@ if __name__ == "__main__":
         serv.serve_forever()
     except KeyboardInterrupt:
         print("Finalizado servidor")
+
