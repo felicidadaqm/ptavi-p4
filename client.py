@@ -16,7 +16,8 @@ try:
 except IndexError:
     print("Usage: client.py ip puerto registrer sip_adress expires_value")
 
-LINE = register + " sip:" + dirección + " SIP/2.0\r\n" + "Expires: " + expires + "\r\n\r\n"
+LINE = (register + " sip:" + dirección + " SIP/2.0\r\n"
+        + "Expires: " + expires + "\r\n\r\n")
 
 # Creamos el socket, lo configuramos y lo atamos a un servidor/puerto
 try:

@@ -12,7 +12,7 @@ import os.path
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
-    client_dicc= {}
+    client_dicc = {}
 
     def register2json(self):
         """
@@ -31,14 +31,15 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
                 json.dump(self.client_dicc, json_file)
         else:
             self.register2json()
-        
+
     def timeout(self):
         """
         Searchs for expired users
         """
         user_list = []
         for user in self.client_dicc:
-            expiration = datetime.strptime(self.client_dicc[user][1][1],'%Y-%m-%d %H:%M:%S')
+            expiration = datetime.strptime(
+                            self.client_dicc[user][1][1], '%Y-%m-%d %H:%M:%S')
             actual_time = datetime.now()
             if actual_time >= expiration:
                 user_list.append(user)
@@ -50,7 +51,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
         handle method of the server class
         (all requests will be handled by this method)
         """
-        
+
         self.wfile.write(b"Hemos recibido tu peticion \n")
         for line in self.rfile:
             ip = self.client_address[0]
@@ -58,31 +59,39 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
             if line.decode('utf-8') == '\r\n':
                 continue
             else:
-                print("El cliente nos manda ", line.decode('utf-8')[:-2])
                 request = line.decode('utf-8').split(" ")
 
             if request[0] == 'REGISTER':
-                dirección = request[1][request[1].find(':')+1:]
+                email = request[1][request[1].find(':')+1:]
 
             elif request[0] == 'Expires:':
-                if int(request[1]) == 0:
+                if int(request[1]) == 0 and email != "":
                     try:
-                        del self.client_dicc[dirección]
-                        self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n') 
+                        print("\n" + "Recibida petición de borrado")
+                        del self.client_dicc[email]
+                        self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')
                     except KeyError:
                         print("Este usuario no existe" + "\n")
-                else:
+                elif email != "":
+                    print("\n" + "Recibida petición de registro")
                     seconds = timedelta(seconds=int(request[1]))
                     expiration = datetime.now() + seconds
-                    self.client_dicc[dirección] = [("address:", ip), ("expires:", str(expiration)[:-7])]
+                    self.client_dicc[email] = [
+                            ("address:", ip),
+                            ("expires:", str(expiration)[:-7])]
                     self.wfile.write(b'SIP/2.0 200 OK' + b'\r\n\r\n')
+
+            elif request[0] != 'REGISTER' and request[0] != 'Expires':
+                email = ""
+                print("\n" + "Petición inválida")
 
         self.timeout()
         self.json2registered()
         print(self.client_dicc)
 
+
 if __name__ == "__main__":
-    # Listens at localhost ('') port 6001 
+    # Listens at localhost ('') port 6001
     # and calls the EchoHandler class to manage the request
     if len(sys.argv) != 2:
         print("Usage: server.py port")
@@ -90,7 +99,7 @@ if __name__ == "__main__":
 
     port = int(sys.argv[1])
     serv = socketserver.UDPServer(('', port), SIPRegisterHandler)
-    print("Lanzando servidor UDP de eco...")
+    print("Lanzando servidor UDP...")
 
     try:
         serv.serve_forever()
