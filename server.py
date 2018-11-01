@@ -7,8 +7,8 @@ Clase (y programa principal) para un servidor de eco en UDP simple
 import socketserver
 import sys
 import json
-from datetime import datetime, timedelta
 import os.path
+from datetime import datetime, timedelta
 
 
 class SIPRegisterHandler(socketserver.DatagramRequestHandler):
@@ -83,7 +83,8 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
             elif request[0] != 'REGISTER' and request[0] != 'Expires':
                 email = ""
-                print("\n" + "Petición inválida")
+                print("\n" + "Recibida petición inválida")
+                self.wfile.write(b'Peticion invalida' + b'\r\n\r\n')
 
         self.timeout()
         self.json2registered()
@@ -91,8 +92,7 @@ class SIPRegisterHandler(socketserver.DatagramRequestHandler):
 
 
 if __name__ == "__main__":
-    # Listens at localhost ('') port 6001
-    # and calls the EchoHandler class to manage the request
+
     if len(sys.argv) != 2:
         print("Usage: server.py port")
         sys.exit()
